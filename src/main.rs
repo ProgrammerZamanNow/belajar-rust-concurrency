@@ -280,4 +280,29 @@ mod tests {
 
         println!("Counter : {}", counter.load(Ordering::Relaxed));
     }
+
+    #[test]
+    fn test_mutex(){
+        use std::sync::{Arc, Mutex};
+
+        let counter: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+
+        let mut handles = vec![];
+        for _ in 0..10 {
+            let counter_clone = Arc::clone(&counter);
+            let handle = thread::spawn(move ||{
+                for _ in 0..1000000 {
+                    let mut data = counter_clone.lock().unwrap();
+                    *data += 1;
+                }
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap()
+        }
+
+        println!("Counter : {}", *counter.lock().unwrap());
+    }
 }
