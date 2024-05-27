@@ -1,5 +1,8 @@
+use std::thread;
+
 fn main() {
-    println!("Hello, world!");
+    let current_thread = thread::current();
+    println!("{} : Hello, world!", current_thread.name().unwrap());
 }
 
 #[cfg(test)]
@@ -46,8 +49,12 @@ mod tests {
 
     fn calculate() -> i32 {
         let mut counter = 0;
+        let current = thread::current();
         for i in 0..=5 {
-            println!("Counter : {}", i);
+            match current.name() {
+                None => { println!("{:?} : Counter : {}", current.id(), i); }
+                Some(name) => { println!("{} : Counter : {}", name, i); }
+            }
             thread::sleep(Duration::from_secs(1));
             counter += 1;
         }
@@ -85,7 +92,10 @@ mod tests {
     }
 
     #[test]
-    fn test_closure(){
+    fn test_closure() {
+        let current_thread = thread::current();
+        println!("{}", current_thread.name().unwrap());
+
         let name = String::from("Eko");
         let closure = move || {
             thread::sleep(Duration::from_secs(2));
