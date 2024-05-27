@@ -215,7 +215,7 @@ mod tests {
     static mut COUNTER: i32 = 0;
 
     #[test]
-    fn test_race_condition(){
+    fn test_race_condition() {
         let mut handles = vec![];
         for _ in 0..10 {
             let handle = thread::spawn(|| unsafe {
@@ -230,18 +230,18 @@ mod tests {
             handle.join().unwrap()
         }
 
-        println!("Counter : {}", unsafe {COUNTER});
+        println!("Counter : {}", unsafe { COUNTER });
     }
 
     #[test]
-    fn test_atomic(){
+    fn test_atomic() {
         use std::sync::atomic::{AtomicI32, Ordering};
 
         static counter: AtomicI32 = AtomicI32::new(0);
 
         let mut handles = vec![];
         for _ in 0..10 {
-            let handle = thread::spawn(||{
+            let handle = thread::spawn(|| {
                 for _ in 0..1000000 {
                     counter.fetch_add(1, Ordering::Relaxed);
                 }
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn test_atomic_reference(){
+    fn test_atomic_reference() {
         use std::sync::atomic::{AtomicI32, Ordering};
         use std::sync::Arc;
 
@@ -266,7 +266,7 @@ mod tests {
         let mut handles = vec![];
         for _ in 0..10 {
             let counter_clone = Arc::clone(&counter);
-            let handle = thread::spawn(move ||{
+            let handle = thread::spawn(move || {
                 for _ in 0..1000000 {
                     counter_clone.fetch_add(1, Ordering::Relaxed);
                 }
@@ -282,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mutex(){
+    fn test_mutex() {
         use std::sync::{Arc, Mutex};
 
         let counter: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
@@ -290,7 +290,7 @@ mod tests {
         let mut handles = vec![];
         for _ in 0..10 {
             let counter_clone = Arc::clone(&counter);
-            let handle = thread::spawn(move ||{
+            let handle = thread::spawn(move || {
                 for _ in 0..1000000 {
                     let mut data = counter_clone.lock().unwrap();
                     *data += 1;
@@ -304,5 +304,33 @@ mod tests {
         }
 
         println!("Counter : {}", *counter.lock().unwrap());
+    }
+
+    use std::cell::RefCell;
+
+    thread_local! {
+        pub static NAME: RefCell<String> = RefCell::new("Default".to_string())
+    }
+    thread_local! {
+        pub static OTHER_NAME: RefCell<String> = RefCell::new("Default".to_string())
+    }
+
+    #[test]
+    fn test_thread_local() {
+        let handle = thread::spawn(|| {
+            NAME.with_borrow_mut(|name| {
+                *name = "Budi".to_string()
+            });
+
+            NAME.with_borrow(|name| {
+                println!("Hello : {}", name);
+            })
+        });
+
+        handle.join().unwrap();
+
+        NAME.with_borrow(|name| {
+            println!("Hello : {}", name)
+        });
     }
 }
