@@ -398,4 +398,18 @@ mod tests {
             handle.join().unwrap();
         }
     }
+
+    async fn get_async_data() -> String {
+        thread::sleep(Duration::from_secs(2));
+        println!("Hello from Async");
+        return "Hello From Async".to_string();
+    }
+
+    #[tokio::test]
+    async fn test_async(){
+        let function = get_async_data();
+        println!("Finish Call Async");
+        let data = function.await;
+        println!("{}", data);
+    }
 }
