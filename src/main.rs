@@ -105,4 +105,14 @@ mod tests {
         let handle = thread::spawn(closure);
         handle.join().unwrap();
     }
+
+    #[test]
+    fn test_thread_factory(){
+        let factory = thread::Builder::new().name("My Thread".to_string());
+
+        let handle = factory.spawn(calculate).expect("Failed to create a new thread");
+        let total = handle.join().unwrap();
+
+        println!("Total Counter : {}", total);
+    }
 }
