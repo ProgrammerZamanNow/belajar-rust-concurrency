@@ -7,6 +7,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use std::cmp::Ordering;
     use std::thread;
     use std::thread::JoinHandle;
     use std::time::Duration;
@@ -230,5 +231,28 @@ mod tests {
         }
 
         println!("Counter : {}", unsafe {COUNTER});
+    }
+
+    #[test]
+    fn test_atomic(){
+        use std::sync::atomic::{AtomicI32, Ordering};
+        
+        static counter: AtomicI32 = AtomicI32::new(0);
+        
+        let mut handles = vec![];
+        for _ in 0..10 {
+            let handle = thread::spawn(||{
+                for _ in 0..1000000 {
+                    counter.fetch_add(1, Ordering::Relaxed);
+                }
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap()
+        }
+
+        println!("Counter : {}", counter.load(Ordering::Relaxed));
     }
 }
