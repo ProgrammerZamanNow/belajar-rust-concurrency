@@ -7,7 +7,6 @@ mod tests {
     use std::thread;
     use std::thread::JoinHandle;
     use std::time::Duration;
-    use crate::main;
 
     #[test]
     fn test_create_thread() {
@@ -83,5 +82,17 @@ mod tests {
         }
 
         println!("Application Finish");
+    }
+
+    #[test]
+    fn test_closure(){
+        let name = String::from("Eko");
+        let closure = move || {
+            thread::sleep(Duration::from_secs(2));
+            println!("Hello {}", name);
+        };
+
+        let handle = thread::spawn(closure);
+        handle.join().unwrap();
     }
 }
