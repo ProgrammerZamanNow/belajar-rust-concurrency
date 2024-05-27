@@ -307,6 +307,7 @@ mod tests {
     }
 
     use std::cell::RefCell;
+    use std::sync::{Arc, Barrier};
 
     thread_local! {
         pub static NAME: RefCell<String> = RefCell::new("Default".to_string())
@@ -333,18 +334,38 @@ mod tests {
             println!("Hello : {}", name)
         });
     }
-    
+
     #[test]
     fn test_thread_panic(){
         let handle = thread::spawn(|| {
             panic!("oops!, something went wrong");
         });
-        
+
         match handle.join() {
             Ok(_) => println!("thread finish"),
             Err(_) => println!("thread panic")
         }
-        
+
         println!("application finish")
+    }
+
+    #[test]
+    fn test_barrier(){
+        let barrier = Arc::new(Barrier::new(10));
+        let mut handles = vec![];
+
+        for i in 0..10 {
+            let barrier_clone = Arc::clone(&barrier);
+            let handle = thread::spawn(move || {
+                println!("Join Game-{}", i);
+                barrier_clone.wait();
+                println!("Gamer-{} Start!", i);
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
     }
 }
