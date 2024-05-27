@@ -333,4 +333,18 @@ mod tests {
             println!("Hello : {}", name)
         });
     }
+    
+    #[test]
+    fn test_thread_panic(){
+        let handle = thread::spawn(|| {
+            panic!("oops!, something went wrong");
+        });
+        
+        match handle.join() {
+            Ok(_) => println!("thread finish"),
+            Err(_) => println!("thread panic")
+        }
+        
+        println!("application finish")
+    }
 }
