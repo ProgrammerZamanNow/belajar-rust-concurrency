@@ -236,14 +236,39 @@ mod tests {
     #[test]
     fn test_atomic(){
         use std::sync::atomic::{AtomicI32, Ordering};
-        
+
         static counter: AtomicI32 = AtomicI32::new(0);
-        
+
         let mut handles = vec![];
         for _ in 0..10 {
             let handle = thread::spawn(||{
                 for _ in 0..1000000 {
                     counter.fetch_add(1, Ordering::Relaxed);
+                }
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap()
+        }
+
+        println!("Counter : {}", counter.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn test_atomic_reference(){
+        use std::sync::atomic::{AtomicI32, Ordering};
+        use std::sync::Arc;
+
+        let counter: Arc<AtomicI32> = Arc::new(AtomicI32::new(0));
+
+        let mut handles = vec![];
+        for _ in 0..10 {
+            let counter_clone = Arc::clone(&counter);
+            let handle = thread::spawn(move ||{
+                for _ in 0..1000000 {
+                    counter_clone.fetch_add(1, Ordering::Relaxed);
                 }
             });
             handles.push(handle);
