@@ -308,6 +308,7 @@ mod tests {
 
     use std::cell::RefCell;
     use std::sync::{Arc, Barrier, Once};
+    use tokio::runtime::Runtime;
 
     thread_local! {
         pub static NAME: RefCell<String> = RefCell::new("Default".to_string())
@@ -433,5 +434,31 @@ mod tests {
             let data = handle.await.unwrap();
             println!("response : {}", data);
         }
+    }
+
+    async fn run_concurrent(runtime: Arc<Runtime>) {
+        let mut handles = vec![];
+
+        for i in 0..10 {
+            let handle = runtime.spawn(get_database_data(i));
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            let data = handle.await.unwrap();
+            println!("response : {}", data);
+        }
+    }
+
+    #[test]
+    fn test_runtime(){
+        let runtime = Arc::new(
+            tokio::runtime::Builder::new_multi_thread()
+                .worker_threads(10)
+                .enable_time()
+                .build().unwrap()
+        );
+        
+        runtime.block_on(run_concurrent(Arc::clone(&runtime)));
     }
 }
